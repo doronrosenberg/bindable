@@ -20,28 +20,26 @@ const TICK_DURATION = 50;
 
 export class DeferredNodeChange {
   node: BaseNode;
-  skipPropogation: boolean;
+  skipPropagation: boolean;
 
-  constructor(node: BaseNode, skipPropogation: boolean) {
+  constructor(node: BaseNode, skipPropagation: boolean) {
     this.node = node;
-    this.skipPropogation = skipPropogation;
+    this.skipPropagation = skipPropagation;
   }
 }
 
 /**
- *
  * The notification controller (better name?) handles notifying observers on bindable nodes.
  *
- * Change notifications per root node are queued and delayed by TICK_DURATION.  If a root node already has a delayed
+ * Change notifications per root node are batched and delayed (at most) by TICK_DURATION.  If a root node already has a delayed
  * change then we append any new changes to the existing delay tick.
- *
  */
 export class NotificationController {
   queue: WeakMap<BaseNode, Array<DeferredNodeChange>> = new WeakMap();
   ticks: WeakMap<BaseNode, TimeoutID> = new WeakMap();
   markedNodes: WeakSet<BaseNode> = new WeakSet();
 
-  nodeChanged(node: BaseNode, skipPropogation: boolean = false) {
+  nodeChanged(node: BaseNode, skipPropagation: boolean = false) {
     // get the root
     let root: BaseNode = node;
     while (root._bindMetadata.parentNode) {
@@ -59,7 +57,7 @@ export class NotificationController {
     if (changes && !changes.some((item) => {
         return item.node === node;
       })) {
-      changes.push(new DeferredNodeChange(node, skipPropogation));
+      changes.push(new DeferredNodeChange(node, skipPropagation));
     }
 
     if (!this.ticks.has(root)) {
@@ -84,14 +82,14 @@ export class NotificationController {
       this.markedNodes = new WeakSet();
 
       changedNodes && changedNodes.forEach((item) => {
-        this.fireChange(item.node, item.skipPropogation);
+        this.fireChange(item.node, item.skipPropagation);
       });
 
       this.queue.delete(root);
     }
   }
 
-  fireChange(node: BaseNode, skipPropogation: boolean = false) {
+  fireChange(node: BaseNode, skipPropagation: boolean = false) {
     if (this.markedNodes.has(node)) {
       return;
     }
@@ -103,7 +101,7 @@ export class NotificationController {
       handle._callback();
     });
 
-    if (!skipPropogation) {
+    if (!skipPropagation) {
       node._bindMetadata.parentNode && this.fireChange(node._bindMetadata.parentNode);
     }
   }

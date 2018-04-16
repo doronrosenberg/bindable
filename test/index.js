@@ -251,7 +251,7 @@ describe('Bindable Tests', function() {
       Bindable.mark(bd.deep.value, 'valid', true);
     });
 
-    it('Test change queuing', function() {
+    it('Test change batching', function() {
       return new Promise((resolve, reject) => {
         const bd = Bindable.from({
           name: 'foo',
@@ -265,7 +265,7 @@ describe('Bindable Tests', function() {
         const handle = Bindable.observe((bd.deep.dive), () => {
           counter++;
 
-          // we expect only one fire due to queueing
+          // we expect only one fire due to batching
           if (counter > 1) {
             reject('observe got called more than once');
             return;
@@ -284,7 +284,7 @@ describe('Bindable Tests', function() {
       });
     });
 
-    it('Test change queuing - avoid multiple change calls on parent nodes', function() {
+    it('Test change batching - avoid multiple change calls on parent nodes', function() {
       return new Promise((resolve, reject) => {
         const bd = Bindable.from({
           deep: {
@@ -298,7 +298,7 @@ describe('Bindable Tests', function() {
         const handle = Bindable.observe((bd.deep), () => {
           counter++;
 
-          // we expect only one fire due to queueing
+          // we expect only one fire due to batching
           if (counter > 1) {
             reject(new Error('observe got called more than once'));
             return;
@@ -340,7 +340,7 @@ describe('Bindable Tests', function() {
         const handle = Bindable.observe(bd.deep, () => {
           counter++;
 
-          // we expect only one fire due to queueing
+          // we expect only one fire due to batching
           if (counter > 1) {
             reject(new Error('observe got called more than once'));
             return;
@@ -381,7 +381,7 @@ describe('Bindable Tests', function() {
         function handler() {
           counter++;
 
-          // we expect only one fire due to queueing
+          // we expect only one hit due to batching
           if (counter > 3) {
             reject(new Error('observe got called more than once'));
             return;

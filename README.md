@@ -10,7 +10,7 @@ Allows:
   * Freeze/unfreeze subtrees (readonly mode)
   * Ability to mark nodes with custom metadata (invalid, changed, etc)
   * One source of truth - changes are applied synchronously
-  * Events are async and bundled to reduce change notification storms
+  * Events are async and batched to reduce change notification storms
   * Allow two way bindings because we are not babies
 
 Planned:

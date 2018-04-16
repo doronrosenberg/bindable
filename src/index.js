@@ -15,9 +15,7 @@
 // @flow
 
 /**
- *
  * Bindable
- *
  *
  * TODO:
  *   - setting complex types/arrays
@@ -27,14 +25,13 @@
  *   - marking only informs the node and doesn't propogate the change event as markings can go deep.  Need to think more if that is the best solution.
  *   - deferred notifications are individually deferred per root node, is this the right way or do we just have one global tick?
  *   - deferring can go on indefinitely, should we flush at a certain # of ticks?
- *
  */
 
 import { NotificationController } from './notification';
-import { BaseNode, ChainedMapNode, MapNode, PrimitiveNode, SetNode } from "./node";
+import { BaseNode, ChainedMapNode, MapNode, PrimitiveNode, SetNode } from "./nodes/index";
 
 // re-export
-export * from './node';
+export * from './nodes/index';
 
 // singleton that handles notification bundling
 const controller = new NotificationController();
@@ -62,27 +59,46 @@ export class Chainable<T: BaseNode> {
 }
 
 export default class Bindable {
+
+  /*
+   * Takes a JSON structure and converts it to a tree of BaseNodes
+   */
   static from(data: any): BaseNode {
     return Bindable._import(data);
   }
 
-  static observe(node: BaseNode, callback: Function) {
+  /*
+   * Creates an observer for the specified BaseNode, which will call the provided callback function when BaseNode
+   * is modified or any children are modified and the change is not set to skip propagation).
+   *
+   * Returns a BindableHandle.
+   */
+  static observe(node: BaseNode, callback: Function): BindableHandle {
     const handle = new BindableHandle(node, callback);
     node._bindMetadata.observers.add(handle);
 
     return handle;
   }
 
+  /*
+   * Unregisters an observer.
+   */
   static unobserve(handle: BindableHandle) {
     if (handle) {
       handle._node._bindMetadata.observers.delete(handle);
     }
   }
 
+  /*
+   * Freezes a BaseNode and all its children.  Any modification will throw an Error.
+   */
   static freeze(node: BaseNode) {
     node.mark('readonly', true, true);
   }
 
+  /*
+   * Unfreezes a BaseNode and all its children.
+   */
   static unfreeze(node: BaseNode) {
     node.unmark('readonly', true);
   }
@@ -123,7 +139,7 @@ export default class Bindable {
     }
   }
 
-  static _nodeChanged(node: BaseNode, skipPropogation: boolean) {
-    controller.nodeChanged(node, skipPropogation);
+  static _nodeChanged(node: BaseNode, skipPropagation: boolean) {
+    controller.nodeChanged(node, skipPropagation);
   }
 }
